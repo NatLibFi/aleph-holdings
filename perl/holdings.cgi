@@ -30,6 +30,7 @@ use HTTP::Request::Common;
 use Cwd 'abs_path';
 use File::Basename qw(dirname);
 
+my $cmd_path = dirname(abs_path($0));
 my $config_ref = do("$cmd_path/holdings.config");
 die("Could not parse configuration: $@") if ($@ || !$config_ref);
 my %config = %$config_ref;

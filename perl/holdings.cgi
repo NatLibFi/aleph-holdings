@@ -116,12 +116,14 @@ sub get_bibid_from_local($) {
     my $response = $ua->get($url);
     $url = $response->header('Location');
 
-    my ($bibId) = $url =~ /.*bibId=(.*)$/;
+    my ($bibId) = $url =~ /.*bibId=(.*)$/;  # Tomcat
+    my ($bibId2) = $url =~ /.*BBID=(.*)$/;  # Classic
 
     if (defined($bibId)) {
-
-      return $bibId
-    
+      return $bibId;
+    }
+    if (defined($bibId2)) {
+      return $bibId2;
     }
   } while (defined($url));
 

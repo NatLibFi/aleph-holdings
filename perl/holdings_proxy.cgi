@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/opt/CSCperl/current/bin/perl
 #
 # Voyager XML holdings proxy -> JSON
 # Copyright (c) 2015 University Of Helsinki (The National Library Of Finland)

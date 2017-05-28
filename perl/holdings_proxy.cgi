@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/opt/CSCperl/current/bin/perl
 #
 # Voyager XML holdings proxy -> JSON
 # Copyright (c) 2015 University Of Helsinki (The National Library Of Finland)
@@ -43,6 +43,7 @@ my $g_callback = '';
 {
   binmode(STDOUT, ":utf8");
 
+  my $is_aurora_ils;
   my $id = param('id');
   my $lib = param('lib');
   my $callback = param('callback');
@@ -60,6 +61,12 @@ my $g_callback = '';
   my $fieldlist = get_record($id);
 
   my $original_id = '';
+  my @sids = ();
+
+  if (defined($config{'libraries'}{$lib}{'ils'}) && $config{'libraries'}{$lib}{'ils'} == 'aurora') {
+    $is_aurora_ils = 1;
+  }
+
   foreach my $field (@$fieldlist)
   {
     if ($field->{'code'} eq 'SID')
@@ -71,7 +78,10 @@ my $g_callback = '';
         my $sid_c = get_subfield($field->{'data'}, 'c');
         debugout("Found original ID $sid_c");
         $original_id = $sid_c;
-        last;
+        push(@sids, $sid_c);
+        if (!$is_aurora_ils) {
+          last;
+        }
       }
     }
   }
@@ -94,8 +104,15 @@ my $g_callback = '';
     }
   }
   $url .= 'globalBibId=' . url_encode($id);
-  $url .= '&localBibId=' . url_encode($original_id);
-
+  
+  if ($is_aurora_ils) {
+    foreach my $lid (@sids) {
+      $url .= '&localBibId=' . url_encode($lid);
+    }  
+  } else {
+    $url .= '&localBibId=' . url_encode($original_id);
+  }
+  
   debugout("url=$url");
 
   print header(-type => 'application/json', -charset => 'UTF-8', -expires => 'Thu, 25-Apr-1999 00:40:33 GMT',

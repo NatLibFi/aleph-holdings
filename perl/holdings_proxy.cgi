@@ -1,7 +1,8 @@
 #!/opt/CSCperl/current/bin/perl
+#!/usr/bin/perl
 #
 # Voyager XML holdings proxy -> JSON
-# Copyright (c) 2015 University Of Helsinki (The National Library Of Finland)
+# Copyright (c) 2015-2017 University Of Helsinki (The National Library Of Finland)
 #  
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by

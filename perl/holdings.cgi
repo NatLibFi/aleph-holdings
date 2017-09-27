@@ -1,7 +1,7 @@
-#!/usr/bin/perl
+#!/opt/CSCperl/current/bin/perl 
 #
 # Aleph Central Catalog -> Voyager holdings redirector
-# Copyright (c) 2015 University Of Helsinki (The National Library Of Finland)
+# Copyright (c) 2015-2017 University Of Helsinki (The National Library Of Finland)
 #  
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+# Aleph Central Catalog -> Voyager holdings redirector
 # v1.1 for Aleph 18
 # 2008 Ere Maijala / The National Library of Finland
 
@@ -28,7 +29,6 @@ use CGI qw(:standard);
 use LWP::UserAgent;
 use HTTP::Request::Common;
 use Cwd 'abs_path';
-use File::Basename qw(dirname);
 
 my $cmd_path = dirname(abs_path($0));
 my $config_ref = do("$cmd_path/holdings.config");
@@ -96,6 +96,9 @@ my %config = %$config_ref;
   	if ($original_id eq '') {
       $original_id = get_bibid_from_local($url);
   	}
+	unless ($original_id) {
+		fail('No original ID found.');
+	}
 
     $url = $config{'libraries'}{$lib}{'finna_url'} . url_encode($original_id);
   }
@@ -117,14 +120,15 @@ sub get_bibid_from_local($) {
     $url = $response->header('Location');
 
     my ($bibId) = $url =~ /.*bibId=(.*)$/;  # Tomcat
-    my ($bibId2) = $url =~ /.*BBID=(.*)$/;  # Classic
+	my ($bibId2) = $url =~ /.*BBID=(.*)$/;  # Classic
 
     if (defined($bibId)) {
-      return $bibId;
+		return $bibId;    
     }
-    if (defined($bibId2)) {
-      return $bibId2;
-    }
+	if (defined($bibId2)) {
+		return $bibId2;
+	}
+
   } while (defined($url));
 
   return undef;

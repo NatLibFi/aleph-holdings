@@ -4,7 +4,7 @@
 *  JavaScript code in this page.
 *
 * Embed record holdings (Retrieved with holdings_proxy.cgi) in HTML
-* Copyright (c) 2015 University Of Helsinki (The National Library Of Finland)
+* Copyright (c) 2015-2017 University Of Helsinki (The National Library Of Finland)
 *
 * This file is part of aleph-holdings
 *  

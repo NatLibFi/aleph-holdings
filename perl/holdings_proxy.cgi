@@ -2,7 +2,7 @@
 #!/usr/bin/perl
 #
 # Voyager XML holdings proxy -> JSON
-# Copyright (c) 2015-2017 University Of Helsinki (The National Library Of Finland)
+# Copyright (c) 2015 University Of Helsinki (The National Library Of Finland)
 #  
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -33,7 +33,7 @@ use Cwd 'abs_path';
 use File::Basename qw(dirname);
 
 my $cmd_path = dirname(abs_path($0));
-my $config_ref = do("$cmd_path/holdings_proxy.config");
+my $config_ref = do("$cmd_path/holdings_proxy_esa.config"); # HUOM.
 die("Could not parse configuration: $@") if ($@ || !$config_ref);
 my %config = %$config_ref;
 
@@ -86,6 +86,51 @@ my $g_callback = '';
       }
     }
   }
+
+  ##################  2017 IX ################  MELINDA-193
+  my $testi = "just testing";
+   my @kids = ();   # Melinda-ID't & 035 ; case MELINDA-193
+     
+   foreach my $field (@$fieldlist)
+    { 
+      # get from field Melinda,  001
+      if ($field->{'code'} eq '001') 
+      {
+           $testi = $field->{'code'}  ;   
+           $testi = $testi . "= " .  $field->{'data'}  ;
+        push(@kids, $field->{'data'});
+      } 
+
+      # get from field 035
+      if ($field->{'code'} eq '035')
+      {
+           $testi = $testi . "\n"  . $field->{'code'}  ;
+           $testi = $testi . "= " .  $field->{'data'}  ;
+        my $found = $field->{'data'}  ;
+           $found =~ s/^....\(FI-MELINDA\)//g ;
+        push(@kids, $found);
+      }
+
+      # get from DATA where there is Melinda number 
+      if ($field->{'data'} =~ /^....\(FI-MELINDA\).*/ ) {             
+            $testi = $testi . "\n * "  . $field->{'code'}  ;
+            $testi = $testi . "= " .  $field->{'data'}  ;
+        my $found = $field->{'data'}  ;
+           $found =~ s/^....\(FI-MELINDA\)//g ; 
+	    $testi = $testi . " => " . $found  ;
+       push(@kids, $found); 
+      }
+
+   } # foreach my $field <-
+
+           $testi .= " \n --- kids listed: --- \n " ; 
+
+	   foreach my $kidsrows (@kids) {
+	    $testi = $testi .  "kids: " . $kidsrows . "\n";
+	   }
+
+  ################# 2017 IX  #################  <- MELINDA-193
+
   if ($original_id =~ /^FCC(\d+)/)
   {
     $id = $1;
@@ -105,7 +150,18 @@ my $g_callback = '';
     }
   }
   $url .= 'globalBibId=' . url_encode($id);
-  
+
+################# 2017 IX -B-  #################  -> MELINDA-193
+$testi .= " \n url (original): " . $url ;
+  foreach my $kidsrow (@kids) {
+  	chop($kidsrow);
+	$url = $url .  "&globalBibId=" . $kidsrow ;
+  }
+
+$testi .= " \n url: (added) " . $url ;
+
+################# 2017 IX -B-  #################  <- MELINDA-193
+
   if ($is_aurora_ils) {
     foreach my $lid (@sids) {
       $url .= '&localBibId=' . url_encode($lid);
@@ -217,6 +273,18 @@ my $g_callback = '';
       $fields{'textual_holdings_stmt'} =~ s/^\s//;
     }
 
+ ######### add IX 2017 ##########
+
+  my @newIssues = $doc->getElementsByTagName('newIssue');     
+
+    foreach my $issue (@newIssues) {
+      my $item_enum = $issue->getAttributeNode('itemEnum')->getValue();
+       $fields{'textual_holdings_stmt'} .= "<br> - "  . "$item_enum" if ($item_enum);
+    }  
+
+ ######### add IX 2017 #########
+
+    
     $fields{'supplements'} = '';
     $fields = get_field_count($marcref, '867');
     for (my $i = 1; $i <= $fields; $i++)
@@ -240,6 +308,7 @@ my $g_callback = '';
       $fields{'indexes'} .= "$f868a" if ($f868a);
       $fields{'indexes'} .= " -- $f868z" if ($f868z);
     }
+
 
     $fields{'item_count'} = 0;
     $fields{'items_available'} = 0;
@@ -275,6 +344,9 @@ my $g_callback = '';
       $first_due_at_location{$json_loc} = $due_date if ($due_date && (!$first_due_at_location{$json_loc} || $due_date lt $first_due_at_location{$json_loc}));
     }
 
+
+
+
     my $fields_text = '';
     foreach my $key (sort keys %fields)
     {
@@ -293,9 +365,30 @@ my $g_callback = '';
       $locations_text .= ",\n" if ($locations_text);
       $locations_text .= "        { \"location\": \"$loc\", \"items\": \"$count\", \"available\": \"$available\", \"first_due_date\": \"$first_due\" }";
     }
+
+ ####### -> IIX & IX 2017 - ########## >
+   my $text = qw/location/;  
+   my $testaus = $doc->getElementsByTagName($text)->item(0);
+   if (defined $testaus) {  
+     
+       my $perm_loc_extra = "";
+      foreach my $location_extra ($doc->getElementsByTagName('mfhd')){
+        $perm_loc_extra = $location_extra->getElementsByTagName('location')->item(0)->getAttribute('dispname');
+      }
+
+      if (length($locations_text) == 0)  {
+      $locations_text= "      { \"location\": \"$perm_loc_extra\",}"; 
+      }  
+       
+   }
+ 
+####### <- IIX & IX 2017 - ######### <-
+
+ $locations_text = $testi;              # "0oooo ooo oooo ooooooooooooo0";
+
     $fields_text .= qq|,
       "item_locations": [
-$locations_text
+       $locations_text
       ]|;
     $json .= ",\n" if ($json);
     $json .= qq|    {

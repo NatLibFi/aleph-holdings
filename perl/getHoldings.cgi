@@ -87,7 +87,7 @@
 #               Allow from all
 #       </Directory>
 #
-#  Restart Apache in order for the configuration change to take effect. / edit.18.10.2017
+#  Restart Apache in order for the configuration change to take effect. / edit.26.10.2017
 
 use strict;
 use DBI;
@@ -205,7 +205,7 @@ sub init_settings() {
 }
 
 
-  my $data = " " ;   #  info about bib ids found etc
+  my $data = " * " ;   #  Debug info about bib ids found etc TEMPORARY
 
 
 sub get_bib_id($$) {
@@ -233,53 +233,121 @@ sub get_bib_id($$) {
 
   my $count_loc = 0; 
   my $count_glob = 0;
-  my @collectedBibs;
+  my @collectedBibs=();
+  my $previous ="";
+     
+ # @GlobalBibs ->
+     my @GlobalBibs = param('globalBibId');
+     my @sortedArray = sort(@GlobalBibs);
+        @GlobalBibs = @sortedArray;
+                      @sortedArray = ();
 
-  my @LocalBibs = param('localBibId');
-     foreach my $name (@LocalBibs) {
-       my $value = $name;
-       $count_loc = $count_loc + 1; 
-     }
- 
-
-  my @GlobalBibs = param('globalBibId');
      foreach my $name (@GlobalBibs ) {
-       my $value = $name;
-       $count_glob = $count_glob + 1;
-              push(@collectedBibs,$value);
+        if ($previous eq $name) {  # skip
+	} else {
+           my $value = $name;
+              $count_glob = $count_glob + 1;
+              push(@sortedArray,$value);
+	          $previous = $name;
+	  }
      }
+       @GlobalBibs = @sortedArray;
+
+# push(@collectedBibs,"-/-");  # TEST & DEBUG ONLY <---!
 
 
+ # @LocalBibs ->
+   $previous ="";
+  my @LocalBibs = param('localBibId');
+     my @sortedArray = sort(@LocalBibs);
+        @LocalBibs = @sortedArray;
+                     @sortedArray = (); 
+
+     foreach my $name (@LocalBibs) {
+        if ($previous eq $name) {  # skip
+        } else {
+       my $value = $name;
+       $count_loc = $count_loc + 1;
+       push(@sortedArray,$value);
+       }
+     }
+          @LocalBibs = @sortedArray;
+
+         # debug ->
+		 push @collectedBibs, "|[A]From params Glob: " , @GlobalBibs, " | Loc: " , @LocalBibs, "| ";
+                   my $pieceString="";
+                foreach my $piece (@collectedBibs) {
+                    $pieceString .= $piece . "  ";
+                }
+                $data .= $pieceString ;
+         # <- debug
+            @collectedBibs = ();
+
+
+
+# push(@collectedBibs,"-*fromSQL*->");  # TEST & DEBUG ONLY  <---!		  
 
   my $date_sth = $dbh->prepare("alter session set nls_date_format = 'yyyy.mm.dd hh24:mi:ss'") || die($dbh->errstr);
   $date_sth->execute() || die($dbh->errstr);
   $date_sth->finish();
 
-  # Convert parameter bib id to local bib id:
-  my $bib_id = undef;
+
+ my $bib_id = undef;  # Lieneen lopulta tarpeeton??
+
+
+# check Locals
+    # Converted parameter bib id to local bib id:
+    my $bib_id_found_Loc = undef;
 
   if ( $count_loc >=1 ) {
    foreach my $name (@LocalBibs) {
      my $sth = $dbh->prepare("SELECT BIB_ID FROM ${tablespace}BIB_TEXT WHERE BIB_ID = ?") || fail($dbh->errstr);
      $sth->execute($name) || die($dbh->errstr);
          if (my (@row) = $sth->fetchrow_array()) {
-         $bib_id = $row[0];
-       }
-     $sth->finish();
-       if (!$bib_id) {
-          $dbh->disconnect();
-          fail('Bib record not found/Local...');
+            $bib_id_found_Loc = $row[0];
+             push(@collectedBibs,$bib_id_found_Loc);
+             $data .= "<br /> [B] Local found in SQL: $name ->  $bib_id_found_Loc " ;
          } else {
-         push(@collectedBibs,$bib_id);
-       }
+             $data .= "<br /> [B] FAIL/Local NOT found in SQL: $name ->  $bib_id_found_Loc  ! " ;
+             # fail('Bib record not found/Local...');
+         }
+     $sth->finish();
           # return $bib_id;     
    } 
       # return $bib_id;
-  }       
+      # $dbh->disconnect(); 
+ }       
 
-         my $previous="";                 # deduplicate ->
-         my @sortedArray = sort(@collectedBibs);
-            @collectedBibs = @sortedArray;
+
+
+# check globals
+
+ my $bib_id_found_Glob = undef;
+
+if ( $count_glob >=1 ) {
+
+ foreach my $name (@GlobalBibs) {
+
+  my $sth = $dbh->prepare("SELECT BIB_ID FROM ${tablespace}BIB_INDEX WHERE INDEX_CODE='035A' AND NORMAL_HEADING=?") || fail($dbh->errstr);
+  $sth->execute("FCC$name") || die($dbh->errstr);
+    if (my (@row) = $sth->fetchrow_array()) {
+      $bib_id = $row[0];
+      $bib_id_found_Glob = $bib_id ;  # sic!!!
+         $data .= "<br /> [C] SQL,Global Found $name -> $bib_id_found_Glob  " ;
+         push(@collectedBibs,$bib_id_found_Glob); 
+      } else {
+           $data .= "<br /> [C] SQL,Global NOT found in SQL for $name ! " ;
+           #fail('Bib record not found/global');
+      }
+   #   $dbh->disconnect();
+   $sth->finish();
+
+  }  # foreach
+} # if
+            
+
+     # uniqd ->
+         my $previous="";                 
          my @collectedBibsSec;
 
        foreach my $found (@collectedBibs) {
@@ -290,7 +358,9 @@ sub get_bib_id($$) {
               push(@collectedBibsSec,$found);
               $previous = $found;
            }
-       } 
+       }
+     # <- uniqd 
+
 
 
                   my $count=0;
@@ -301,33 +371,24 @@ sub get_bib_id($$) {
                 }
 
 
+
             if ($count == 0) {
-                    $data .= "  Bib record not found. ";
-                } elsif ($count == 1)  {
-                    $data .= "  Bib record found: " .  @collectedBibsSec[0] ;
+		  # fail('Bib record not found. (0)');	
+			$data .= "<br /> [D]GIVE FAIL: - 0 found -";
+
+                } elsif ($count == 1)  {              
 			$bib_id = @collectedBibsSec[0] ; 	                         
 			        # return $bib_id;   #  return later 
+				$data .= "<br /> [D] - 1 found OK! RETURN THIS: $bib_id   -";
                 } elsif ($count > 1) {
-                    $data .= "  Several bib records found: " . $pieceString ;
+		        $data .= "<br /> [D] [status: fail] Several bib records found:" .$count . "="  . $pieceString  ; 
+			# fail("Several bib records found:  $pieceString   ");
                 } else {
-                    $data .= "  ???" . $count ;
-                }
+                    fail('Exception/314');
+           }
        
-#original:
-#  my $sth = $dbh->prepare("SELECT BIB_ID FROM ${tablespace}BIB_INDEX WHERE INDEX_CODE='035A' AND NORMAL_HEADING=?") || fail($dbh->errstr);
-#  $sth->execute("FCC$global_bib_id") || die($dbh->errstr);
-#  if (my (@row) = $sth->fetchrow_array()) {
-#    $bib_id = $row[0];
-#  }
-#  $sth->finish();
-#  if (!$bib_id) {
-#    $dbh->disconnect();
-#    fail('Bib record not found');
-#  }
 
-
-   return $bib_id;   # checked ids
-
+      return $bib_id;   # checked ids  
 
 }
 
@@ -358,7 +419,8 @@ select record_segment
   if (!$found)
   {
     $dbh->disconnect();
-    fail('Bib record not found');
+   # fail('Bib record not found');
+
   }
 
   return $marcstr;
@@ -590,7 +652,7 @@ select its.item_status, its.item_status_date
     }
     $item_sth->finish();
 
-         $item_xml .= $data;  # info about bib ids found
+                     $item_xml .= $data;  # info about bib ids found
 
     $item_xml .= "    </items>\n";
 

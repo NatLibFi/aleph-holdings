@@ -22,7 +22,7 @@
 #
 # Required parameters when called via cgi:
 # id   the 001 of the source record
-# lib  Aleph owning library ID
+# lib  Aleph owning library ID  / v.2017.12.1
 
 use strict;
 use CGI qw(:standard);
@@ -33,7 +33,7 @@ use Cwd 'abs_path';
 use File::Basename qw(dirname);
 
 my $cmd_path = dirname(abs_path($0));
-my $config_ref = do("$cmd_path/holdings_proxy_esa.config"); # HUOM.
+my $config_ref = do("$cmd_path/holdings_proxy_esa.config");         # HUOM. !!!
 die("Could not parse configuration: $@") if ($@ || !$config_ref);
 my %config = %$config_ref;
 
@@ -89,23 +89,19 @@ my $g_callback = '';
 
   ##################  2017 IX ################  MELINDA-193
   my $testi = "just testing";
-   my @kids = ();   # Melinda-ID't & 035 ; case MELINDA-193
+   my @kids = ();   # Melinda-ID's & 035
      
    foreach my $field (@$fieldlist)
     { 
       # get from field Melinda,  001
       if ($field->{'code'} eq '001') 
       {
-           $testi = $field->{'code'}  ;   
-           $testi = $testi . "= " .  $field->{'data'}  ;
         push(@kids, $field->{'data'});
       } 
 
       # get from field 035
       if ($field->{'code'} eq '035')
       {
-           $testi = $testi . "\n"  . $field->{'code'}  ;
-           $testi = $testi . "= " .  $field->{'data'}  ;
         my $found = $field->{'data'}  ;
            $found =~ s/^....\(FI-MELINDA\)//g ;
         push(@kids, $found);
@@ -113,21 +109,13 @@ my $g_callback = '';
 
       # get from DATA where there is Melinda number 
       if ($field->{'data'} =~ /^....\(FI-MELINDA\).*/ ) {             
-            $testi = $testi . "\n * "  . $field->{'code'}  ;
-            $testi = $testi . "= " .  $field->{'data'}  ;
         my $found = $field->{'data'}  ;
            $found =~ s/^....\(FI-MELINDA\)//g ; 
-	    $testi = $testi . " => " . $found  ;
        push(@kids, $found); 
       }
 
    } # foreach my $field <-
 
-           $testi .= " \n --- kids listed: --- \n " ; 
-
-	   foreach my $kidsrows (@kids) {
-	    $testi = $testi .  "kids: " . $kidsrows . "\n";
-	   }
 
   ################# 2017 IX  #################  <- MELINDA-193
 
@@ -149,16 +137,27 @@ my $g_callback = '';
       $url .= '?';
     }
   }
-  $url .= 'globalBibId=' . url_encode($id);
+
+   push(@kids, url_encode($id) );
 
 ################# 2017 IX -B-  #################  -> MELINDA-193
-$testi .= " \n url (original): " . $url ;
+# $testi .= " \n url (original): " . $url ;
+
+            my $previous="";
+            my @sortedArray = sort(@kids);
+               @kids = @sortedArray;
+  
   foreach my $kidsrow (@kids) {
-  	chop($kidsrow);
-	$url = $url .  "&globalBibId=" . $kidsrow ;
+             chop($kidsrow);
+
+  	if ($previous eq $kidsrow) { }  # skip
+           else {
+	      $url = $url .  "&globalBibId=" . url_encode($kidsrow) ;
+              $previous = $kidsrow;
+       }
   }
 
-$testi .= " \n url: (added) " . $url ;
+$testi .= " \n url: (added_&_uniqd) " . $url ;
 
 ################# 2017 IX -B-  #################  <- MELINDA-193
 
@@ -384,7 +383,7 @@ $testi .= " \n url: (added) " . $url ;
  
 ####### <- IIX & IX 2017 - ######### <-
 
- $locations_text = $testi;              # "0oooo ooo oooo ooooooooooooo0";
+ $locations_text = $testi;           # shows the URL  
 
     $fields_text .= qq|,
       "item_locations": [

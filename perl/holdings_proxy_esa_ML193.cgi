@@ -22,7 +22,7 @@
 #
 # Required parameters when called via cgi:
 # id   the 001 of the source record
-# lib  Aleph owning library ID  / v.2017.12.1
+# lib  Aleph owning library ID  / v.2017.12.14
 
 use strict;
 use CGI qw(:standard);
@@ -391,7 +391,6 @@ my $g_callback = '';
     $fields_text .= qq|,
       "item_locations": [
        {	
-       $locations_text
        }
       ]|;
     $json .= ",\n" if ($json);
@@ -403,7 +402,10 @@ $fields_text
   my $error = $doc->getElementsByTagName('error');
   my $error_json = $error && '  "error": "' . json_escape(get_xml_text($error->item(0))) . "\",\n";
   $json = qq|{ "holdings": {
-$error_json  "lib": "$lib_escaped",
+  $error_json  "lib": "$lib_escaped",
+  "debug":  {
+     "URL": $url
+     },
   "mfhd": [
 $json
   ]

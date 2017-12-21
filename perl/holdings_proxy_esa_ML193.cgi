@@ -22,7 +22,7 @@
 #
 # Required parameters when called via cgi:
 # id   the 001 of the source record
-# lib  Aleph owning library ID  / v.2017.12.14
+# lib  Aleph owning library ID  / v.2017.12.21
 
 use strict;
 use CGI qw(:standard);
@@ -33,7 +33,7 @@ use Cwd 'abs_path';
 use File::Basename qw(dirname);
 
 my $cmd_path = dirname(abs_path($0));
-my $config_ref = do("$cmd_path/holdings_proxy_esa.config");         # HUOM. !!!
+my $config_ref = do("$cmd_path/holdings_proxy_esa.config");         # OBS. !!!
 die("Could not parse configuration: $@") if ($@ || !$config_ref);
 my %config = %$config_ref;
 
@@ -68,6 +68,7 @@ my $g_callback = '';
     $is_aurora_ils = 1;
   }
 
+
   foreach my $field (@$fieldlist)
   {
     if ($field->{'code'} eq 'SID')
@@ -88,32 +89,31 @@ my $g_callback = '';
   }
 
   ### added  2017,  case  MELINDA-193 ->
-#  my $testi =  "";   # " debug: ";
-   my @kids = ();   
+  my @kids = ();   
+
      
    foreach my $field (@$fieldlist)
     { 
-      # get from field Melinda,  001
+      # get from field  001  Melinda
       if ($field->{'code'} eq '001') 
       {
-        push(@kids, $field->{'data'});
+        push(@kids, $field->{'data'} );
       } 
+
+      # get from DATA where there is Melinda number
+      if ($field->{'data'} =~ /^....\(FI-MELINDA\).*/ ) {
+        my $found = $field->{'data'}  ;
+           $found =~ s/^....\(FI-MELINDA\)//g ;
+        push(@kids, $found) ;
+      }
 
       # get from field 035
       if ($field->{'code'} eq '035')
       {
         my $found = $field->{'data'}  ;
            $found =~ s/^....\(FI-MELINDA\)//g ;
-        push(@kids, $found);
+        push(@kids, $found );
       }
-
-      # get from DATA where there is Melinda number 
-      if ($field->{'data'} =~ /^....\(FI-MELINDA\).*/ ) {             
-        my $found = $field->{'data'}  ;
-           $found =~ s/^....\(FI-MELINDA\)//g ; 
-       push(@kids, $found); 
-      }
-
 
    } 
 
@@ -125,6 +125,25 @@ my $g_callback = '';
     $id = $1;
     $original_id = '';
   }
+
+      # --->
+      # checking for suitable localBibId from @sids (i.e. no FCC)
+      # @sid-checked: is SID; lowtag=lib param; 
+        foreach my $sidic (@sids) 
+        {
+             if ($sidic =~ /^FCC(\d+)/)
+              {
+                 # begins with FCC; specification C
+	         my $strip =~ s/^FCC//g ;
+		 push(@kids, $strip) ;      # to globals
+              }
+              else
+              {
+                 $original_id .=  $sidic;     # localBibId 
+              }
+        }
+      # < ---  
+ 
 
   my $url = $config{'libraries'}{$lib}{'url'};
   if ($url !~ /[\?&]$/)
@@ -148,7 +167,8 @@ my $g_callback = '';
                @kids = @sortedArray;
   
   foreach my $kidsrow (@kids) {
-             chop($kidsrow);
+             
+	    $kidsrow  = substr($kidsrow, 0, 9);
 
   	if ($previous eq $kidsrow) { }  # skip
            else {
@@ -157,9 +177,8 @@ my $g_callback = '';
        }
   }
 
-# $testi .= " \n url: (added_&_uniqd) " . $url ;
-
 ### 2017 added --- case  MELINDA-193 <-
+
 
   if ($is_aurora_ils) {
     foreach my $lid (@sids) {

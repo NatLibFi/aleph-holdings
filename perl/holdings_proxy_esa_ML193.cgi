@@ -2,7 +2,7 @@
 #!/usr/bin/perl
 #
 # Voyager XML holdings proxy -> JSON
-# Copyright (c) 2015 University Of Helsinki (The National Library Of Finland)
+# Copyright (c) 2015-2017 University Of Helsinki (The National Library Of Finland)
 #  
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -88,7 +88,6 @@ my $g_callback = '';
     }
   }
 
-  ### added  2017,  case  MELINDA-193 ->
   my @kids = ();   
 
      
@@ -117,7 +116,6 @@ my $g_callback = '';
 
    } 
 
-  ###  added  2017,  case  MELINDA-193 <-
 
 
   if ($original_id =~ /^FCC(\d+)/)
@@ -126,9 +124,8 @@ my $g_callback = '';
     $original_id = '';
   }
 
-      # --->
+
       # checking for suitable localBibId from @sids (i.e. no FCC)
-      # @sid-checked: is SID; lowtag=lib param; 
         foreach my $sidic (@sids) 
         {
              if ($sidic =~ /^FCC(\d+)/)
@@ -142,7 +139,6 @@ my $g_callback = '';
                  $original_id .=  $sidic;     # localBibId 
               }
         }
-      # < ---  
  
 
   my $url = $config{'libraries'}{$lib}{'url'};
@@ -160,7 +156,6 @@ my $g_callback = '';
 
    push(@kids, url_encode($id) );
 
-### 2017 added --- case  MELINDA-193 ->
 
             my $previous="";
             my @sortedArray = sort(@kids);
@@ -177,7 +172,6 @@ my $g_callback = '';
        }
   }
 
-### 2017 added --- case  MELINDA-193 <-
 
 
   if ($is_aurora_ils) {
@@ -291,7 +285,7 @@ my $g_callback = '';
       $fields{'textual_holdings_stmt'} =~ s/^\s//;
     }
 
-### 2017 added --- case  MELINDA-193 ->
+
 
   my @newIssues = $doc->getElementsByTagName('newIssue');     
 
@@ -300,7 +294,6 @@ my $g_callback = '';
        $fields{'textual_holdings_stmt'} .= "<br> - "  . "$item_enum" if ($item_enum);
     }  
 
-### 2017 added --- case  MELINDA-193 <-
 
 
     
@@ -385,7 +378,7 @@ my $g_callback = '';
       $locations_text .= "        { \"location\": \"$loc\", \"items\": \"$count\", \"available\": \"$available\", \"first_due_date\": \"$first_due\" }";
     }
 
-### 2017 added --- case  MELINDA-193 ->
+
 
    my $text = qw/location/;  
    my $testaus = $doc->getElementsByTagName($text)->item(0);
@@ -402,10 +395,9 @@ my $g_callback = '';
        
    }
 
-### 2017 added --- case  MELINDA-193 <-
  
 
- $locations_text = '"URL": "' . $url . '"';           #  shows the URL  
+ $locations_text = '"URL": "' . $url . '"';            
 
     $fields_text .= qq|,
       "item_locations": [

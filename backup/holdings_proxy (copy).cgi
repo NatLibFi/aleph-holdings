@@ -22,7 +22,7 @@
 #
 # Required parameters when called via cgi:
 # id   the 001 of the source record
-# lib  Aleph owning library ID
+# lib  Aleph owning library ID  / v.2017.12.1
 
 use strict;
 use CGI qw(:standard);
@@ -33,7 +33,7 @@ use Cwd 'abs_path';
 use File::Basename qw(dirname);
 
 my $cmd_path = dirname(abs_path($0));
-my $config_ref = do("$cmd_path/holdings_proxy.config");        
+my $config_ref = do("$cmd_path/holdings_proxy_esa.config");         # HUOM. !!!
 die("Could not parse configuration: $@") if ($@ || !$config_ref);
 my %config = %$config_ref;
 
@@ -87,7 +87,7 @@ my $g_callback = '';
     }
   }
 
-  
+  ##################  2017 IX ################  MELINDA-193
   my $testi = "just testing";
    my @kids = ();   # Melinda-ID's & 035
      
@@ -117,7 +117,7 @@ my $g_callback = '';
    } # foreach my $field <-
 
 
-  
+  ################# 2017 IX  #################  <- MELINDA-193
 
   if ($original_id =~ /^FCC(\d+)/)
   {
@@ -140,8 +140,8 @@ my $g_callback = '';
 
    push(@kids, url_encode($id) );
 
-
-
+################# 2017 IX -B-  #################  -> MELINDA-193
+# $testi .= " \n url (original): " . $url ;
 
             my $previous="";
             my @sortedArray = sort(@kids);
@@ -159,7 +159,7 @@ my $g_callback = '';
 
 $testi .= " \n url: (added_&_uniqd) " . $url ;
 
-
+################# 2017 IX -B-  #################  <- MELINDA-193
 
   if ($is_aurora_ils) {
     foreach my $lid (@sids) {
@@ -272,7 +272,7 @@ $testi .= " \n url: (added_&_uniqd) " . $url ;
       $fields{'textual_holdings_stmt'} =~ s/^\s//;
     }
 
- 
+ ######### add IX 2017 ##########
 
   my @newIssues = $doc->getElementsByTagName('newIssue');     
 
@@ -281,7 +281,7 @@ $testi .= " \n url: (added_&_uniqd) " . $url ;
        $fields{'textual_holdings_stmt'} .= "<br> - "  . "$item_enum" if ($item_enum);
     }  
 
-
+ ######### add IX 2017 #########
 
     
     $fields{'supplements'} = '';
@@ -365,7 +365,7 @@ $testi .= " \n url: (added_&_uniqd) " . $url ;
       $locations_text .= "        { \"location\": \"$loc\", \"items\": \"$count\", \"available\": \"$available\", \"first_due_date\": \"$first_due\" }";
     }
 
- 
+ ####### -> IIX & IX 2017 - ########## >
    my $text = qw/location/;  
    my $testaus = $doc->getElementsByTagName($text)->item(0);
    if (defined $testaus) {  
@@ -381,9 +381,9 @@ $testi .= " \n url: (added_&_uniqd) " . $url ;
        
    }
  
+####### <- IIX & IX 2017 - ######### <-
 
-
- $locations_text = $testi;         
+ $locations_text = $testi;           # shows the URL  
 
     $fields_text .= qq|,
       "item_locations": [

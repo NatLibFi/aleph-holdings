@@ -88,7 +88,7 @@ my $g_callback = '';
   }
 
   
-  my $testi = "just testing";
+ 
    my @kids = ();   # Melinda-ID's & 035
      
    foreach my $field (@$fieldlist)
@@ -157,7 +157,6 @@ my $g_callback = '';
        }
   }
 
-$testi .= " \n url: (added_&_uniqd) " . $url ;
 
 
 
@@ -383,7 +382,7 @@ $testi .= " \n url: (added_&_uniqd) " . $url ;
  
 
 
- $locations_text = $testi;         
+  $locations_text = '"URL": "' . $url . '"';        
 
     $fields_text .= qq|,
       "item_locations": [

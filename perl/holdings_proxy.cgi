@@ -97,13 +97,22 @@ my $g_callback = '';
       if ($field->{'code'} eq '001') 
       {
         push(@kids, $field->{'data'});
+        debugout("f001=".$field->{'data'})
       } 
 
-      # get from field 035
+      # get from field 035 subfields $a and $z
       if ($field->{'code'} eq '035')
       {
         my $found = $field->{'data'}  ;
-           $found =~ s/^....\(FI-MELINDA\)//g ;
+        $found =~ s/^....\(FI-MELINDA\)//g ;
+        debugout("Old_text=".$found);
+
+        my $f035a = get_subfield($field->{'data'}, 'a');
+        my $f035z = get_subfield($field->{'data'}, 'z');
+
+        debugout("f035a=".$f035a);
+        debugout("f035z=".$f035z);
+
         push(@kids, $found);
       }
 
@@ -111,13 +120,13 @@ my $g_callback = '';
       if ($field->{'data'} =~ /^....\(FI-MELINDA\).*/ ) {             
         my $found = $field->{'data'}  ;
            $found =~ s/^....\(FI-MELINDA\)//g ; 
+           debugout("2nd_old_text=".$found);
        push(@kids, $found); 
       }
 
    } # foreach my $field <-
 
 
-  
 
   if ($original_id =~ /^FCC(\d+)/)
   {

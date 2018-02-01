@@ -96,37 +96,29 @@ my $g_callback = '';
       # get from field Melinda,  001
       if ($field->{'code'} eq '001') 
       {
-		    my $f001=$field->{'data'};
-		    $f001 =~ s/\x1e//g;  
-        push(@kids, $f001);
-        debugout("f001=".$field->{'data'}."edited to ".$f001);
+        push(@kids, $field->{'data'});
       } 
 
-      # get from field 035 subfields $a and $z
+      # get from field 035
       if ($field->{'code'} eq '035')
       {
-        my $f035a = get_subfield($field->{'data'}, 'a');
-        my $f035z = get_subfield($field->{'data'}, 'z');
-
-		    if ($f035a =~ m/\(FI-MELINDA\)/)
-        {
-			    $f035a =~ s/\(FI-MELINDA\)//g ;	
-			    push(@kids,$f035a);
-			    debugout("f035a=".$f035a." pushed to list.");	
-		    }
-
-		    if ($f035z =~ m/\(FI-MELINDA\)/)
-        {
-			    $f035z =~ s/\(FI-MELINDA\)//g ;
-			    push(@kids,$f035z);
-			    debugout("f035z=".$f035z." pushed to list.");	
-		    }
-      
+        my $found = $field->{'data'}  ;
+           $found =~ s/^....\(FI-MELINDA\)//g ;
+        push(@kids, $found);
       }
 
-   }
+      # get from DATA where there is Melinda number 
+      if ($field->{'data'} =~ /^....\(FI-MELINDA\).*/ ) {             
+        my $found = $field->{'data'}  ;
+           $found =~ s/^....\(FI-MELINDA\)//g ; 
+       push(@kids, $found); 
+      }
+
+   } # foreach my $field <-
+
 
   
+
   if ($original_id =~ /^FCC(\d+)/)
   {
     $id = $1;
@@ -156,13 +148,15 @@ my $g_callback = '';
                @kids = @sortedArray;
   
   foreach my $kidsrow (@kids) {
-  
+             chop($kidsrow);
+
   	if ($previous eq $kidsrow) { }  # skip
            else {
 	      $url = $url .  "&globalBibId=" . url_encode($kidsrow) ;
               $previous = $kidsrow;
        }
   }
+
 
 
 
@@ -388,7 +382,7 @@ my $g_callback = '';
  
 
 
-  #$locations_text = '"URL": "' . $url . '"';        
+  $locations_text = '"URL": "' . $url . '"';        
 
     $fields_text .= qq|,
       "item_locations": [
@@ -400,12 +394,10 @@ $fields_text
     }|;
   }
   my $lib_escaped = json_escape($lib);
-  my $url_escaped = json_escape($url);
   my $error = $doc->getElementsByTagName('error');
   my $error_json = $error && '  "error": "' . json_escape(get_xml_text($error->item(0))) . "\",\n";
   $json = qq|{ "holdings": {
-$error_json  "lib": "$lib_escaped", 
-  "url": "$url_escaped",
+$error_json  "lib": "$lib_escaped",
   "mfhd": [
 $json
   ]
@@ -444,7 +436,7 @@ sub get_record($)
     return undef;
   }
 
-  #debugout("X-Server response: $xml");
+  debugout("X-Server response: $xml");
 
   my @list = ();
   my $field_start = "\x1f";

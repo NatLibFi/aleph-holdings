@@ -94,9 +94,9 @@ my %config = %$config_ref;
 
   if ($opacType eq 'finna') {
 
-  	if ($original_id eq '') {
+  #	if ($original_id eq '') {
       $original_id = get_bibid_from_local($url);
-  	}
+  #	}
 	unless ($original_id) {
 		fail('No original ID found.');
 	}

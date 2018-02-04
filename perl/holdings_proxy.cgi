@@ -2,7 +2,8 @@
 #!/usr/bin/perl
 #
 # Voyager XML holdings proxy -> JSON
-# Copyright (c) 2015-2017 University Of Helsinki (The National Library Of Finland)
+
+# Copyright (c) 2015-2018 University Of Helsinki (The National Library Of Finland)
 #  
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,9 +21,14 @@
 # v1.1 for Aleph 18
 # 2008 Ere Maijala / The National Library of Finland
 #
+# v.1.2
+# 2018 Henri Mäkilä, Minttu Hurme, Esa Kaalikoski / The National Library of Finland
+#
+#
 # Required parameters when called via cgi:
 # id   the 001 of the source record
 # lib  Aleph owning library ID
+# 
 
 use strict;
 use CGI qw(:standard);
@@ -86,6 +92,48 @@ my $g_callback = '';
       }
     }
   }
+
+  
+ 
+   my @kids = ();   # Melinda-ID's & 035
+     
+   foreach my $field (@$fieldlist)
+    { 
+      # get from field Melinda,  001
+      if ($field->{'code'} eq '001') 
+      {
+		    my $f001=$field->{'data'};
+		    $f001 =~ s/\x1e//g;  
+        push(@kids, $f001);
+        debugout("f001=".$field->{'data'}."edited to ".$f001);
+      } 
+
+      # get from field 035 subfields $a and $z
+      if ($field->{'code'} eq '035')
+      {
+        my $f035a = get_subfield($field->{'data'}, 'a');
+        my $f035z = get_subfield($field->{'data'}, 'z');
+
+		    if ($f035a =~ m/\(FI-MELINDA\)/)
+        {
+			    $f035a =~ s/\(FI-MELINDA\)//g ;	
+			    push(@kids,$f035a);
+			    debugout("f035a=".$f035a." pushed to list.");	
+		    }
+
+		    if ($f035z =~ m/\(FI-MELINDA\)/)
+        {
+			    $f035z =~ s/\(FI-MELINDA\)//g ;
+			    push(@kids,$f035z);
+			    debugout("f035z=".$f035z." pushed to list.");	
+		    }
+      
+      }
+
+   }
+
+
+
   if ($original_id =~ /^FCC(\d+)/)
   {
     $id = $1;

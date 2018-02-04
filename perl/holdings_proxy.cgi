@@ -2,7 +2,7 @@
 #!/usr/bin/perl
 #
 # Voyager XML holdings proxy -> JSON
-# Copyright (c) 2015 University Of Helsinki (The National Library Of Finland)
+# Copyright (c) 2015-2018 University Of Helsinki (The National Library Of Finland)
 #  
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,9 +20,14 @@
 # v1.1 for Aleph 18
 # 2008 Ere Maijala / The National Library of Finland
 #
+# v.1.2
+# 2018 Henri Mäkilä, Minttu Hurme, Esa Kaalikoski / The National Library of Finland
+#
+#
 # Required parameters when called via cgi:
 # id   the 001 of the source record
 # lib  Aleph owning library ID
+# 
 
 use strict;
 use CGI qw(:standard);
@@ -125,6 +130,7 @@ my $g_callback = '';
       }
 
    }
+
 
   
   if ($original_id =~ /^FCC(\d+)/)

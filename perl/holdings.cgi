@@ -69,6 +69,53 @@ my %config = %$config_ref;
       }
     }
   }
+
+   my @kids = ();   # Melinda-ID's & 035
+     
+   foreach my $field (@$fieldlist)
+    { 
+      # get from field Melinda,  001
+      if ($field->{'code'} eq '001') 
+      {
+		    my $f001=$field->{'data'};
+		    $f001 =~ s/\x1e//g;  
+        push(@kids, $f001);
+        debugout("f001=".$field->{'data'}."edited to ".$f001);
+      } 
+
+      # get from field 035 subfields $a and $z
+      # get from field 035 subfields $a and $z
+      if ($field->{'code'} eq '035')
+      {
+        my $f035a = get_subfield($field->{'data'}, 'a');
+        my $f035z = get_subfield($field->{'data'}, 'z');
+
+		    if ($f035a =~ m/\(FI-MELINDA\)/)
+        {
+			    $f035a =~ s/\(FI-MELINDA\)//g ;	
+			    push(@kids,$f035a);
+			    debugout("f035a=".$f035a." pushed to list.");	
+		    }
+
+		    if ($f035z =~ m/\(FI-MELINDA\)/)
+        {
+			    $f035z =~ s/\(FI-MELINDA\)//g ;
+			    push(@kids,$f035z);
+			    debugout("f035z=".$f035z." pushed to list.");	
+		    }
+      
+      }
+
+	}
+
+  if ($original_id =~ /^FCC(\d+)/)
+  {
+    $id = $1;
+	push(@kids,$1);
+    $original_id = '';
+  }
+
+
   my $url = $config{'libraries'}{$lib}{'url'};
   my $opacType = $config{'libraries'}{$lib}{'type'} || 'default';
 
@@ -83,14 +130,16 @@ my %config = %$config_ref;
       $url .= '?';
     }
   }
-  if ($original_id =~ /^FCC(\d+)/)
-  {
-    $id = $1;
-    $original_id = '';
-  }
 
    $url .= 'gid=' . url_encode($id);
-   $url .= '&lid=' . url_encode($original_id);
+  
+  foreach my $kid (@kids) {
+	  $url .= '&gid=' . url_encode($kid);
+  }
+
+  if ($original_id) {
+	  $url .= '&lid=' . url_encode($original_id);
+  }
 
   if ($opacType eq 'finna') {
 
@@ -107,6 +156,11 @@ my %config = %$config_ref;
   debugout("Redirecting to $url");
 
   print redirect($url);
+}
+
+sub uniq {
+	my %seen;
+	return grep { !$seen{$_}++ } @_;
 }
 
 sub get_bibid_from_local($) {

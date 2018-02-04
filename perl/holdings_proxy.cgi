@@ -132,11 +132,10 @@ my $g_callback = '';
 
    }
 
-
-
   if ($original_id =~ /^FCC(\d+)/)
   {
     $id = $1;
+	push(@kids,$1);
     $original_id = '';
   }
 
@@ -152,15 +151,27 @@ my $g_callback = '';
       $url .= '?';
     }
   }
+
+  debugout("global ids: @kids");
+  @kids=uniq(@kids);
+  debugout("uniqed global ids: @kids");
+
   $url .= 'globalBibId=' . url_encode($id);
+
+  foreach my $kid (@kids) {
+	  $url .= '&globalBibId=' . url_encode($kid);
+  }
+
   
   if ($is_aurora_ils) {
     foreach my $lid (@sids) {
       $url .= '&localBibId=' . url_encode($lid);
     }  
   } else {
+	  if ($original_id) { 
     $url .= '&localBibId=' . url_encode($original_id);
-  }
+	  }
+}
   
   debugout("url=$url");
 
@@ -371,6 +382,11 @@ $json
   }
 }
 
+sub uniq {
+	my %seen;
+	return grep { !$seen{$_}++ } @_;
+}
+
 sub get_record($)
 {
   my ($a_id) = @_;
@@ -393,7 +409,7 @@ sub get_record($)
     return undef;
   }
 
-  debugout("X-Server response: $xml");
+  #debugout("X-Server response: $xml");
 
   my @list = ();
   my $field_start = "\x1f";

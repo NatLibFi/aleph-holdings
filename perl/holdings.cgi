@@ -141,16 +141,28 @@ my %config = %$config_ref;
 	  $url .= '&lid=' . url_encode($original_id);
   }
 
-  if ($opacType eq 'finna') {
+  if (defined($config{'libraries'}{$lib}{'ils'}) && $config{'libraries'}{$lib}{'ils'} == 'koha')
+  {
+    # All Koha-libraries should have finna-opac
+    if ($original_id ne '') {
+      $url = $config{'libraries'}{$lib}{'finna_url'} . url_encode($original_id);
+    }  
+    else {
+      $url = $config{'libraries'}{$lib}{'finna_url'};
+      $url =~ s/Record.*//;
+    }
+  }
 
-  #	if ($original_id eq '') {
+  else {
+    if ($opacType eq 'finna') {
+    #	if ($original_id eq '') {
       $original_id = get_bibid_from_local($url);
-  #	}
-	unless ($original_id) {
-		fail('No original ID found.');
-	}
-
+    #	}
+	  unless ($original_id) {
+		  fail('No original ID found.');
+	  }
     $url = $config{'libraries'}{$lib}{'finna_url'} . url_encode($original_id);
+    }
   }
 
   debugout("Redirecting to $url");

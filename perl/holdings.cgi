@@ -141,7 +141,8 @@ my %config = %$config_ref;
 	  $url .= '&lid=' . url_encode($original_id);
   }
 
-  if (defined($config{'libraries'}{$lib}{'ils'}) && $config{'libraries'}{$lib}{'ils'} == 'koha') {
+  if (defined($config{'libraries'}{$lib}{'ils'}) && $config{'libraries'}{$lib}{'ils'} == 'koha')
+  {
     # All Koha-libraries should have finna-opac
     if ($original_id ne '') {
       $url = $config{'libraries'}{$lib}{'finna_url'} . url_encode($original_id);
@@ -161,6 +162,7 @@ my %config = %$config_ref;
 		  fail('No original ID found.');
 	  }
     $url = $config{'libraries'}{$lib}{'finna_url'} . url_encode($original_id);
+    }
   }
 
   debugout("Redirecting to $url");

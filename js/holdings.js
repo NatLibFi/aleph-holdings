@@ -83,6 +83,7 @@ function addScript(i)
 
   var url = $(this).attr('href');
 
+  url = url.replace(/http:/, "https:");
   url = url.replace(/.*"(.*)\".*/, "$1");
   url = url.replace(/holdings\.cgi/, "holdings_proxy.cgi");
   url += '&callback=?';

@@ -45,25 +45,28 @@ my %config = %$config_ref;
 
 my $g_lib = '';
 my $g_callback = '';
+my $g_is_koha_ils = '';
 
 # MAIN
 {
   binmode(STDOUT, ":utf8");
 
   my $is_aurora_ils;
+  my $is_koha_ils;
   my $id = param('id');
   my $lib = param('lib');
   my $callback = param('callback');
 
   if (!$id || !$lib)
   {
-    fail('Mandatory parameter missing');
+    fail_with_headers('Mandatory parameter missing');
   }
 
   $g_lib = $lib;
   $g_callback = $callback;
 
-  fail('Unknown lib') if (!defined($config{'libraries'}{$lib}));
+
+  fail_with_headers('Unknown lib') if (!defined($config{'libraries'}{$lib}));
 
   my $fieldlist = get_record($id);
 
@@ -72,6 +75,12 @@ my $g_callback = '';
 
   if (defined($config{'libraries'}{$lib}{'ils'}) && $config{'libraries'}{$lib}{'ils'} == 'aurora') {
     $is_aurora_ils = 1;
+  }
+
+   if (defined($config{'libraries'}{$lib}{'ils'}) && $config{'libraries'}{$lib}{'ils'} == 'koha') {
+      $is_koha_ils = 1;
+      $g_is_koha_ils = 1;
+      fail_with_headers('Holdings not available for Koha-libraries.');
   }
 
   foreach my $field (@$fieldlist)
@@ -463,16 +472,32 @@ sub get_record($)
   return \@list;
 }
 
+sub fail_with_headers($) {
+
+  my ($msg) = @_;
+
+  print header(-type => 'application/json', -charset => 'UTF-8', -expires => 'Thu, 25-Apr-1999 00:40:33 GMT',
+    -pragma => 'no-cache', -Cache_Control => 'private, no-cache, no-store, must-revalidate, max-age=0, pre-check=0, post-check=0');
+
+   fail($msg);
+
+}
+
 sub fail($)
 {
   my ($msg) = @_;
 
   print STDERR "holdingsproxy: $msg\n";
 
+  my $koha_json;
+  if ($g_is_koha_ils) {
+    $koha_json = ', "koha" : "1"';
+  }
+
   my $lib_escaped = json_escape($g_lib);
   my $error_json = '  "error": "' . json_escape($msg) . "\",\n";
   my $json = qq|{ "holdings": {
-$error_json  "lib": "$lib_escaped",
+$error_json  "lib": "$lib_escaped" $koha_json
   }
 }
 |;

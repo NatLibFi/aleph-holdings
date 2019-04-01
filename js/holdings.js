@@ -42,6 +42,7 @@ if (g_current_language == "eng")
   texts['expand'] = 'Show';
   texts['collapse'] = 'Hide';
   texts['error'] = 'Information not available';
+  texts['koha'] = ' - check Finna for holdings information';
 }
 else if (g_current_language == "swe")
 {
@@ -57,6 +58,7 @@ else if (g_current_language == "swe")
   texts['expand'] = 'Visa';
   texts['collapse'] = 'G&ouml;mma';
   texts['error'] = 'Information inte tillg&auml;nglig';
+  texts['koha'] = ' - se best&aring;ndsuppgifter p&aring; Finna';
 }
 else
 {
@@ -72,6 +74,7 @@ else
   texts['expand'] = 'N&auml;yt&auml;';
   texts['collapse'] = 'Piilota';
   texts['error'] = 'Tietoja ei saatavilla';
+  texts['koha'] = ' - katso saatavuustiedot Finnasta';
 }
 
 function addScript(i)
@@ -91,11 +94,18 @@ function addHoldings(data)
 {
   var lib = data.holdings.lib;
   var error = data.holdings.error;
+  var koha = data.holdings.koha;
 
   if (error)
   {
     $("a[href^=javascript:open_window][href*=holdings.cgi][href*=" + lib + "] + img[src*=throbber]").remove();
-    $("a[href^=javascript:open_window][href*=holdings.cgi][href*=" + lib + "]").after("<br>" + texts['error']);
+    if (koha)
+    {
+      $("a[href^=javascript:open_window][href*=holdings.cgi][href*=" + lib + "]").after("<br>" + texts['error'] + texts['koha']);
+    }
+    else {
+      $("a[href^=javascript:open_window][href*=holdings.cgi][href*=" + lib + "]").after("<br>" + texts['error']);
+    }
     return;
   }
 

@@ -143,9 +143,13 @@ my %config = %$config_ref;
 
   if (defined($config{'libraries'}{$lib}{'ils'}) && $config{'libraries'}{$lib}{'ils'} == 'koha')
   {
-    # All Koha-libraries should have finna-opac
+    # All Koha-libraries should have finna-opac (Note: koha ils functionality works also for Aurora, if there's no working real time availability)
     if ($original_id ne '') {
       $url = $config{'libraries'}{$lib}{'finna_url'} . url_encode($original_id);
+      # clean up local id for Aurora libraries
+      if ($original_id =~ /^\(.*\)(\d+)$/) {
+            $original_id =~ s/^\(.*\)//;
+      }
     }  
     else {
       $url = $config{'libraries'}{$lib}{'finna_url'};

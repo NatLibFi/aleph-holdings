@@ -141,42 +141,53 @@ my %config = %$config_ref;
 	  $url .= '&lid=' . url_encode($original_id);
   }
 
-  if (defined($config{'libraries'}{$lib}{'ils'}) && $config{'libraries'}{$lib}{'ils'} == 'koha')
-  {
-    # All Koha-libraries should have finna-opac (Note: koha ils functionality works also for Aurora, if there's no working real time availability)
-   
-     if (defined($config{'libraries'}{$lib}{'finna_prefix'} ) && defined($config{'libraries'}{$lib}{'finna_url2'}) &&   ($original_id ne '' || $id ne '')) {
-         if ($original_id =~ /^\(.*\)(\d+)$/) {
-            $original_id =~ s/^\(.*\)//;
-        }
+  if (defined($config{'libraries'}{$lib}{'ils'}) && $config{'libraries'}{$lib}{'ils'} == 'koha') {
 
-         $url = $config{'libraries'}{$lib}{'finna_url2'}."";
-         $url .= 'Search/Results?lookfor=';
+          my $finna_url2;
+          my $finna_prefix;
 
+          if (defined($config{'libraries'}{$lib}{'finna_prefix'} ) && defined($config{'libraries'}{$lib}{'finna_url2'}) ) {
+                # https://jyu.finna.fi/Record/jykdok.
+                $finna_url2 = $config{'libraries'}{$lib}{'finna_url2'};
+                $finna_prefix = $config{'libraries'}{$lib}{'finna_prefix'};       
+          }
+                
+          elsif ($config{'libraries'}{$lib}{'finna_url'} =~ m/(http.*\/)(Record\/)(.+\.)/ ) {
+                  $finna_url2 = $1;
+                  $finna_prefix = $3;
+            }
+          
 
-         if ($original_id) {
-             $url .= 'id%3A'.$config{'libraries'}{$lib}{'finna_prefix'} . $original_id. '+OR+local_ids_str_mv%3A' .$config{'libraries'}{$lib}{'finna_prefix'}.$original_id;
-             $url .=    '+OR+ctrlnum%3A%22FCC'.$id.'%22' ;
-             $url .=    '+OR+ctrlnum%3A%22(FI-MELINDA)'.$id.'%22' ;
+    # All Koha-libraries should have finna-opac
+          if (defined($finna_prefix) && defined($finna_url2) && ($original_id ne '' || $id ne '')) {
+                 if ($original_id =~ /^\(.*\)(\d+)$/) {
+                    $original_id =~ s/^\(.*\)//;
+                }     
+                        
+                 $url = $finna_url2; 
+                 $url .= 'Search/Results?bool0[]=OR';
 
-         }
+                
+             if ($original_id) {                 
+                         $url .= '&lookfor0[]=id%3A'.$finna_prefix . $original_id;
+                         $url .= '&lookfor0[]=local_ids_str_mv%3A' .$finna_prefix.$original_id;
+                }       
 
-         else {
-             $url .=    'ctrlnum%3A%22FCC'.$id.'%22' ;
-             $url .=    '+OR+ctrlnum%3A%22(FI-MELINDA)'.$id.'%22' ;
+                 $url .=  '&lookfor0[]=ctrlnum%3A%22FCC'.$id.'%22' ;
+                 $url .=  '&lookfor0[]=ctrlnum%3A%22(FI-MELINDA)'.$id.'%22' ;
+                         
 
-         }
+                 foreach my $kid (@kids) {
 
-         foreach my $kid (@kids) {
+                         if ($kid ne $id) {
+                                $url .= '&lookfor0[]=ctrlnum%3A%22FCC'.$kid.'%22' ;
+                                $url .= '&lookfor0[]=ctrlnum%3A%22(FI-MELINDA)'.$kid.'%22' ;
+                         }
+                 }
 
-             if ($kid ne $id) {
-                $url .= '+OR+ctrlnum%3A%22FCC'.$kid.'%22' ;
-                $url .= '+OR+ctrlnum%3A%22(FI-MELINDA)'.$kid.'%22' ;
-             }
-         }
-
-   
-   }  
+#                print STDERR "\n$url\n";                               
+                
+    } 
     else {
       $url = $config{'libraries'}{$lib}{'finna_url'};
       $url =~ s/Record.*//;

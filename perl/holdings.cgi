@@ -144,13 +144,39 @@ my %config = %$config_ref;
   if (defined($config{'libraries'}{$lib}{'ils'}) && $config{'libraries'}{$lib}{'ils'} == 'koha')
   {
     # All Koha-libraries should have finna-opac (Note: koha ils functionality works also for Aurora, if there's no working real time availability)
-    if ($original_id ne '') {
-      $url = $config{'libraries'}{$lib}{'finna_url'} . url_encode($original_id);
-      # clean up local id for Aurora libraries
-      if ($original_id =~ /^\(.*\)(\d+)$/) {
+   
+     if (defined($config{'libraries'}{$lib}{'finna_prefix'} ) && defined($config{'libraries'}{$lib}{'finna_url2'}) &&   ($original_id ne '' || $id ne '')) {
+         if ($original_id =~ /^\(.*\)(\d+)$/) {
             $original_id =~ s/^\(.*\)//;
-      }
-    }  
+        }
+
+         $url = $config{'libraries'}{$lib}{'finna_url2'}."";
+         $url .= 'Search/Results?lookfor=';
+
+
+         if ($original_id) {
+             $url .= 'id%3A'.$config{'libraries'}{$lib}{'finna_prefix'} . $original_id. '+OR+local_ids_str_mv%3A' .$config{'libraries'}{$lib}{'finna_prefix'}.$original_id;
+             $url .=    '+OR+ctrlnum%3A%22FCC'.$id.'%22' ;
+             $url .=    '+OR+ctrlnum%3A%22(FI-MELINDA)'.$id.'%22' ;
+
+         }
+
+         else {
+             $url .=    'ctrlnum%3A%22FCC'.$id.'%22' ;
+             $url .=    '+OR+ctrlnum%3A%22(FI-MELINDA)'.$id.'%22' ;
+
+         }
+
+         foreach my $kid (@kids) {
+
+             if ($kid ne $id) {
+                $url .= '+OR+ctrlnum%3A%22FCC'.$kid.'%22' ;
+                $url .= '+OR+ctrlnum%3A%22(FI-MELINDA)'.$kid.'%22' ;
+             }
+         }
+
+   
+   }  
     else {
       $url = $config{'libraries'}{$lib}{'finna_url'};
       $url =~ s/Record.*//;

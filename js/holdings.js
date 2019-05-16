@@ -99,13 +99,13 @@ function addHoldings(data)
 
   if (error)
   {
-    $("a[href^=javascript:open_window][href*=holdings.cgi][href*=" + lib + "] + img[src*=throbber]").remove();
+    $("a[href^=javascript:open_window][href*=holdings.cgi][href*=lib=" + lib + "] + img[src*=throbber]").remove();
     if (koha)
     {
-      $("a[href^=javascript:open_window][href*=holdings.cgi][href*=" + lib + "]").after("<br>" + texts['error'] + texts['koha']);
+      $("a[href^=javascript:open_window][href*=holdings.cgi][href*=lib=" + lib + "]").after("<br>" + texts['error'] + texts['koha']);
     }
     else {
-      $("a[href^=javascript:open_window][href*=holdings.cgi][href*=" + lib + "]").after("<br>" + texts['error']);
+      $("a[href^=javascript:open_window][href*=holdings.cgi][href*=lib=" + lib + "]").after("<br>" + texts['error']);
     }
     return;
   }
@@ -206,8 +206,8 @@ function addHoldings(data)
   }
   holdings_html += '</div>';
 
-  $("a[href^=javascript:open_window][href*=holdings.cgi][href*=" + lib + "] + img[src*=throbber]").remove();
-  $("a[href^=javascript:open_window][href*=holdings.cgi][href*=" + lib + "]").after(holdings_html);
+  $("a[href^=javascript:open_window][href*=holdings.cgi][href*=lib=" + lib + "] + img[src*=throbber]").remove();
+  $("a[href^=javascript:open_window][href*=holdings.cgi][href*=lib=" + lib + "]").after(holdings_html);
 
   if ($.cookie('expand_holdings_' + lib) == 'true')
     showHoldings(lib, 1);

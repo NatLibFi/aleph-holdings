@@ -184,7 +184,14 @@ my %config = %$config_ref;
                                 $url .= '&lookfor0[]=ctrlnum%3A%22(FI-MELINDA)'.$kid.'%22' ;
                          }
                  }
-
+		 # Added use_datasource to limit Finna search to library's own records (MELINDA-3922)
+		 # finna_prefix2 used to remove . from finna_prefix
+		if (defined($config{'libraries'}{$lib}{'use_datasource'} ) && $config{'libraries'}{$lib}{'use_datasource'} ) {
+                     my $finna_prefix2 = $finna_prefix;
+                     $finna_prefix2 =~ s/\.$//;
+                     $url .= '&bool1[]=AND&lookfor1[]=datasource_str_mv%3A'.$finna_prefix2;
+		 }
+		 
 #                print STDERR "\n$url\n";                               
                 
     } 

@@ -1,5 +1,6 @@
 # aleph-holdings
-Retrieve holdings for Aleph records from Voyager-databases.
+Create links to local library search engines such as Finna and Primo.
+(Originally retrieved holdings for Aleph records from Voyager-databases.)
 
 ## holdings_proxy.cgi
 
@@ -17,7 +18,8 @@ Example configuration is provided in _res/holdings_proxy_example.config_.
 
 ## holdings.cgi
 
-Get redirection link to a record's holdings information in a library's OPAC.
+Create a link to corresponding record in library (Finna) or just link to library search engine (Primo).
+(Distant Voyager past: Got redirection link to a record's holdings information in a library's OPAC.)
 
 ### URL parameters:
 

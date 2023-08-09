@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #!/opt/CSCperl/current/bin/perl 
 #
-# Aleph Central Catalog -> Voyager holdings redirector
-# Copyright (c) 2015-2017 University Of Helsinki (The National Library Of Finland)
+# Aleph Central Catalog -> local library search engine (Finna, Primo)
+# Copyright (c) 2015-2017,2020,2023 University Of Helsinki (The National Library Of Finland)
 #  
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by

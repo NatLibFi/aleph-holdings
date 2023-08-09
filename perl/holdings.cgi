@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 #!/opt/CSCperl/current/bin/perl 
 #
 # Aleph Central Catalog -> Voyager holdings redirector
@@ -156,6 +157,9 @@ my %config = %$config_ref;
                   $finna_url2 = $1;
                   $finna_prefix = $3;
             }
+#		  else {
+#			  $finna_url2 = $finna_url;
+#		  }
           
 
     # All Koha-libraries should have finna-opac
@@ -184,14 +188,33 @@ my %config = %$config_ref;
                                 $url .= '&lookfor0[]=ctrlnum%3A%22(FI-MELINDA)'.$kid.'%22' ;
                          }
                  }
-		 # Added use_datasource to limit Finna search to library's own records (MELINDA-3922)
-		 # finna_prefix2 used to remove . from finna_prefix
-		if (defined($config{'libraries'}{$lib}{'use_datasource'} ) && $config{'libraries'}{$lib}{'use_datasource'} ) {
+
+
+		  # Added use_datasource to limit Finna search to library's own records (MELINDA-3922)
+		  # finna_prefix2 used to remove . from finna_prefix
+
+		 if (defined($config{'libraries'}{$lib}{'use_datasource'} ) && $config{'libraries'}{$lib}{'use_datasource'} ) { 
                      my $finna_prefix2 = $finna_prefix;
                      $finna_prefix2 =~ s/\.$//;
-                     $url .= '&bool1[]=AND&lookfor1[]=datasource_str_mv%3A'.$finna_prefix2;
+		     $url .= '&bool1[]=OR&lookfor1[]=datasource_str_mv%3A'.$finna_prefix2;
+		     $url .= '&bool1[]=OR&lookfor1[]=datasource_str_mv%3A'.$finna_prefix2.'_electronic';
+		     
+
+		     # NV: extented datasource usage as per MELINDA-8638 exceptions
+		     if ( $finna_prefix2 eq 'abo' ) {
+			 $url .= '&bool1[]=OR&lookfor1[]=datasource_str_mv%3A'.$finna_prefix2.'_electronic_aa';
+			 ## Searching Novia does not work!
+			 ## Novia is indexed under abo.finna.fi/novia ,
+			 ## and not under the default abo.finna.fi .
+			 # $url .= '&bool1[]=OR&lookfor1[]=datasource_str_mv%3A'.$finna_prefix2.'_electronic_novia';
+		     }
+		     elsif ( $finna_prefix2 eq 'luc' ) {
+			 $url .= '&bool1[]=OR&lookfor1[]=datasource_str_mv%3A'.$finna_prefix2.'_electronic_amk';
+			 $url .= '&bool1[]=OR&lookfor1[]=datasource_str_mv%3A'.$finna_prefix2.'_electronic_yo';
+		     }
+
 		 }
-		 
+
 #                print STDERR "\n$url\n";                               
                 
     } 
@@ -207,7 +230,7 @@ my %config = %$config_ref;
       $original_id = get_bibid_from_local($url);
     #	}
 	  unless ($original_id) {
-		  fail('No original ID found.');
+	      fail("No original ID found at $url.");
 	  }
     $url = $config{'libraries'}{$lib}{'finna_url'} . url_encode($original_id);
     }
